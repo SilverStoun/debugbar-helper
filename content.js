@@ -1,5 +1,5 @@
-var xdebug = (function() {
-    // Set a cookie
+var debugbar = (function() {
+    // Создать строку в куки
     function setCookie(name, value, days)
     {
         var exp = new Date();
@@ -7,7 +7,7 @@ var xdebug = (function() {
         document.cookie = name + "=" + value + "; expires=" + exp.toGMTString() + "; path=/";
     }
 
-    // Get the content in a cookie
+    // Получить строку из куки
     function getCookie(name)
     {
         // Search for the start of the goven cookie
@@ -32,51 +32,39 @@ var xdebug = (function() {
         return unescape(document.cookie.substring(cookieStartIndex + prefix.length, cookieEndIndex));
     }
 
-    // Remove a cookie
+    // Удалить строку из куки
     function deleteCookie(name)
     {
         setCookie(name, null, -1);
     }
 
-    // Public methods
     var exposed = {
-        // Handles messages from other extension parts
         messageListener : function(request, sender, sendResponse)
         {
             var newStatus,
-                idekey = "debugbar";
+                key = "debugbar";
 
-            // Use the IDE key from the request, if any is given
-            if (request.idekey)
-            {
-                idekey = request.idekey;
-            }
-
-            // Execute the requested command
+            // Выполнить запрошенную команду
             if (request.cmd == "getStatus")
             {
-                newStatus = exposed.getStatus(idekey);
-            }
-            else if (request.cmd == "toggleStatus")
-            {
-                newStatus = exposed.toggleStatus(idekey);
+                newStatus = exposed.getStatus(key);
             }
             else if (request.cmd == "setStatus")
             {
-                newStatus = exposed.setStatus(request.status, idekey);
+                newStatus = exposed.setStatus(request.status, key);
             }
 
-            // Respond with the current status
+            // Отправляем в ответ новый статус
             sendResponse({ status: newStatus });
         },
 
-        // Get current state
-        // TODO
-        getStatus : function(idekey)
+        // Получить текущий статус
+        getStatus : function(key)
         {
             var status = 0;
 
-            if (getCookie("debugbar") == idekey)
+            // Если в куки есть ключ key, меняем статус на 1
+            if (getCookie(key))
             {
                 status = 1;
             }
@@ -84,34 +72,27 @@ var xdebug = (function() {
             return status;
         },
 
-        // Toggle to the next state
-        toggleStatus : function(idekey)
-        {
-            var nextStatus = (exposed.getStatus(idekey) + 1) % 4;
-            return exposed.setStatus(nextStatus, idekey);
-        },
-
-        // Set the state
-        setStatus : function(status, idekey)
+        // Установить новый статус
+        setStatus : function(status, key)
         {
             if (status == 1)
             {
-                // Set debugging on
+                // Добавляем новую строку в куки (debugbar = 1)
                 setCookie("debugbar", 1, 365);
             }
             else
             {
-                // Disable all Xdebug functions
+                // Удаляем строку с ключом "debugbar"
                 deleteCookie("debugbar");
             }
 
-            // Return the new status
-            return exposed.getStatus(idekey);
+            // Возвращаем новый статус
+            return exposed.getStatus(key);
         }
     };
 
     return exposed;
 })();
 
-// Attach the message listener
-chrome.runtime.onMessage.addListener(xdebug.messageListener);
+// Создаем слушателя на событие прихода сообщений
+chrome.runtime.onMessage.addListener(debugbar.messageListener);

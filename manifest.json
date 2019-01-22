@@ -9,14 +9,11 @@
     "browser_action": {
         "default_icon": "images/icon.svg",
         "default_title": "Debugbar switcher",
-        "default_popup" : "popup.html"
+        "default_popup" : "popup/popup.html"
     },
 
     "content_scripts": [ {
         "js": [ "content.js" ],
         "matches": [ "*://*/*" ]
-    } ],
-    "background": {
-        "scripts": [ "background.js" ]
-    }
+    } ]
 }
